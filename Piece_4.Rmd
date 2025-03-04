@@ -5,9 +5,16 @@ date: "2025-03-03"
 output: html_document
 ---
 
-## Tidy Tuesday - 7/30/2024
+```{r load-packages, message = FALSE, echo = FALSE}
+library(tidyverse) 
+library(ggplot2)
+library(skimr)
 
-The Tidy Tuesday for the week explored movies with "summer" in their title.
+```
+
+# Tidy Tuesday - 7/30/2024
+
+The Tidy Tuesday for the week explored movies with "summer" in their title. They scraped the data from IMDB's website.
 
 
 ```{r setup}
@@ -15,5 +22,146 @@ The Tidy Tuesday for the week explored movies with "summer" in their title.
 tuesdata <- tidytuesdayR::tt_load('2024-07-30')
 summer_movie_genres <- tuesdata$summer_movie_genres
 summer_movies <- tuesdata$summer_movies
+
+view(summer_movie_genres)
+view(summer_movies)
+```
+
+In this Tidy Tuesday, there are two data files, summer_movies_genres, and summer_movies. The data set summer_movies_genres includes unique ID numbers for each film alongside the genre.
+
+## Summer_movie_genres data
+
+```{r plot genres}
+summer_movie_genres %>%
+  ggplot(aes(
+    x = fct_rev(genres)
+  ))+
+  coord_flip()+
+  geom_bar()+
+  labs(
+    y = "Movie Genre",
+    x = NULL,
+    title = "Movies with Summer in the title"
+  )
+```
+
+We can see that there are a large amount of drama, comedy, and romance films with "Summer" in the title compared to other genres. One category that surprised me were the number of reality shows that don't have "Summer" in the title. It feels like there would be an appeal to the "Hot, Wet, and Wild" aspect of summer and reality TV.
+
+Update - after looking at movies in the summer_movies dataset as well, the summer_movie_genres places movies with multiple genres in each cateogry.
+
+## Summer_movies data
+
+There appears to be a lot more we can do with the summer_movies dataset. I first started by gathering a summary of what the data set offers.
+
+```{r summary}
+
+skim(summer_movies)
+summary(summer_movies)
+view(summer_movies)
+```
+
+Using skim() I know there are 905 total movies. There are 10 columns in the dataset, including a unique ID for each movie. There are 6 variables that use characters (tconst, title_type, primary_title, original_title, genres, and simple_title) and 4 variables that are strings (year, runtime_minutes, average_rating, num_votes). 
+
+Using summary(), I can get basic statistics and identification for each variable.
+
+Using view() and looking up several movies on the IMDB website, I was able to understand more about what the observations for each variable are and why they are present in the dataset. Title_type makes the distinction of what kind of movie it was (movie, TV movie, video, etc.). Primary title is the title in English, original_title is the title in the native language, and simple title takes out all punctuation and excess characters (i.e. apostrophes, colons, semicolons). Genres are all the genres that the movie falls under. This can include multiple categories within one movie. Average_rating is the rating for each movie out of ten, and num_votes is how many people ranked the movie.
+
+
+## Visualization and exploration
+
+Now that I understand the data I'm working with, I can now begin to show trends and visualizations in the data. 
+
+```{r visualization 1}
+
+summer_movies %>%
+  ggplot(aes(
+    x = year,
+    y = average_rating
+  ))+
+  geom_smooth(size = 1,
+              span = .15)+
+  labs(
+    x = "Year",
+    y = "Average Rating out of 10",
+    title = "Average movie rating by year"
+  )
+
+```
+
+The first graph I made shows the trend of movie ratings over time. Since there were few observations before 1950, the trend is not completely accurate. Ignoring this, we can see that the average movie is rated a 6/10. The exception is post 2020, as we can see a sharp spike.
+
+```{r visuation 2, warning = FALSE, message = FALSE, fig.width = 10}
+
+summer_movies %>%
+  ggplot(aes(
+    x = year,
+    y = average_rating
+  ))+
+  facet_wrap(~title_type, scale = "free")+
+  geom_smooth(size = 1,
+              span = .15)+
+  labs(
+    x = "Year",
+    y = "Average Rating out of 10",
+    title = "Average movie rating by year",
+    subtitle = "Facet by type of movie"
+  )
+
+```
+
+We can see slight variations in the data when we facet by type of movie. There is a variation in years between the types of movies. Based on history, it makes sense that TV Movies (1950s) and Videos (1990s) started being made later than regular movies. There is also changes in variability for each of the movie types.
+
+
+```{r visualization 3, warning = FALSE, message = FALSE}
+
+
+summer_movies %>%
+  ggplot(aes(
+    y = average_rating,
+    x = runtime_minutes
+  ))+
+  geom_smooth(size = 1,span = .5)+
+  labs(
+    y = "rating",
+    x = "runtime in minutes",
+    title = "Average movie rating based on runtime",
+    subtitle = "Facet by type of movie"
+  )
+
+```
+
+Here I compared run time to rating. There is an interesting bimodality to run time and rating, as movies around the 80 minute run time have lower ratings.
+
+```{r visualization 4, fig.width = 12, fig.height = 8, warning = FALSE, message = FALSE}
+
+summer_movies1 <- summer_movies %>%
+  mutate(year_bin = case_when(
+    year < "1940" ~ "1930s",
+    year >= "1940" & year < "1950" ~ "1940s",
+    year >= "1950" & year < "1960" ~ "1950s",
+    year >= "1960" & year < "1970" ~ "1960s",
+    year >= "1970" & year < "1980" ~ "1970s",
+    year >= "1980" & year < "1990" ~ "1980s",
+    year >= "1990" & year < "2000" ~ "1990s",
+    year >= "2000" & year < "2010" ~ "2000s",
+    year >= "2010" & year < "2020" ~ "2010s",
+    year >= "2020" & year < "2030" ~ "2020s",
+  ))
+
+
+summer_movies1 %>%
+  ggplot(aes(
+    x = runtime_minutes,
+    y = average_rating
+  ))+
+  geom_smooth(size = 1,span = .5)+
+  facet_wrap(~year_bin, scales = "free")+
+  labs(
+    x = "runtime in minutes",
+    y = "rating",
+    title = "Average movie rating based on runtime",
+    subtitle = "Facet by decade"
+  )
+
 ```
 
