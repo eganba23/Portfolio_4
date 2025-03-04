@@ -132,9 +132,12 @@ summer_movies %>%
 
 Here I compared run time to rating. There is an interesting bimodality to run time and rating, as movies around the 80 minute run time have lower ratings.
 
+Now I want understand the breakdown by decade for just movies.
+
 ```{r visualization 4, fig.width = 12, fig.height = 8, warning = FALSE, message = FALSE}
 
-summer_movies1 <- summer_movies %>%
+
+movies_decade <- summer_movies %>%
   mutate(year_bin = case_when(
     year < "1940" ~ "1930s",
     year >= "1940" & year < "1950" ~ "1940s",
@@ -148,13 +151,34 @@ summer_movies1 <- summer_movies %>%
     year >= "2020" & year < "2030" ~ "2020s",
   ))
 
+movies_decade <- movies_decade %>%
+  filter(
+    title_type == "movie"
+  )
 
-summer_movies1 %>%
+movies_decade %>%
+  ggplot(aes(
+    x = runtime_minutes,
+    y = average_rating,
+    color = year_bin
+  ))+
+  geom_smooth(size = 1,span = .5, alpha = .3)+
+  theme_bw()+
+  #facet_wrap(~year_bin, scales = "free")+
+  labs(
+    x = "runtime in minutes",
+    y = "rating",
+    title = "Average movie rating based on runtime",
+    subtitle = "Facet by decade"
+  )
+
+movies_decade %>%
   ggplot(aes(
     x = runtime_minutes,
     y = average_rating
   ))+
   geom_smooth(size = 1,span = .5)+
+  theme_bw()+
   facet_wrap(~year_bin, scales = "free")+
   labs(
     x = "runtime in minutes",
@@ -165,3 +189,92 @@ summer_movies1 %>%
 
 ```
 
+Based on using color to distinguish the different decades, it would look like all the decades have extremely similar ratings based on run time. If you facet by decade, it tells you a different story.
+
+There are lots of interesting things to extrapolate from the graph. Although the 1940s has an apparently steady rating over the decade, the shaded region suggests there is a wide amount of variation. We can also see some of the oddball dips and raises that are most likely due to the low amount of run times during that decade.
+
+
+
+```{r visualziation 5, message = FALSE, fig.show="hold", out.width="50%"}
+
+summer_movies %>%
+  ggplot(aes(
+    x = num_votes,
+    y = average_rating
+  ))+
+  geom_line()
+
+summer_movies %>%
+  ggplot(aes(
+    x = num_votes,
+    y = average_rating
+  ))+
+  geom_smooth()
+
+```
+
+This plot was more for my amusement and to understand the difference between geom_line() and geom_smooth(). They provide you two different pictures of what is going on. Using geom_line(), you can tell there is lots of variation in the lower amount of votes, while the votes with an extreme amount of people show an above average rating.
+
+To better visualize this, I took the films with the ten hightest number of people voting and ten lowest number of people voting and compared them.
+
+```{r visuliation 6, fig.show="hold", out.width="50%"}
+
+top_bottom_25 <- summer_movies %>%
+  filter(
+    title_type == "movie"
+  )
+
+
+top_25 <- top_bottom_25 %>%
+   arrange(desc(num_votes)) %>%
+    slice(1:25) 
+
+top_25 %>%
+  ggplot(aes(
+    x = fct_rev(primary_title),
+    y = average_rating
+  ))+
+  geom_col(alpha = .5)+
+  theme_bw()+
+  geom_text(aes(x = primary_title, 
+              y = average_rating, 
+              label = num_votes))+
+  coord_flip()+
+  labs(
+    x = "Rating",
+    y = NULL,
+    title = "Movie ratings with largest number of raters",
+  )
+
+
+bottom_25 <- top_bottom_25 %>%
+   arrange(num_votes) %>%
+    slice(1:25) 
+
+bottom_25 <- bottom_25 %>%
+mutate(primary_title = case_when(
+    primary_title == "Indian Summer" & year == "2013" ~ "Indian Summer (2013)",
+    .default = as.character(primary_title)
+  ))
+
+
+bottom_25 %>%
+  ggplot(aes(
+    x = fct_rev(primary_title),
+    y = average_rating
+  ))+
+  geom_col(alpha = .5)+
+  theme_bw()+
+  geom_text(aes(x = primary_title, 
+              y = average_rating, 
+              label = num_votes))+
+  coord_flip()+
+  labs(
+    x = "Rating",
+    y = NULL,
+    title = "Movie ratings with smallest number of raters",
+  )
+
+```
+
+You can see in the side by side comparision that there is more variability in the bottom 25 rating than in the top 25 ratings for movies.
