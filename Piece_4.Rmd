@@ -195,21 +195,31 @@ There are lots of interesting things to extrapolate from the graph. Although the
 
 
 
-```{r visualziation 5, message = FALSE, fig.show="hold", out.width="50%"}
+```{r visualziation 5, message = FALSE, fig.height = 6, fig.show="hold", out.width="50%"}
 
 summer_movies %>%
   ggplot(aes(
     x = num_votes,
     y = average_rating
   ))+
-  geom_line()
+  geom_line()+
+  labs(
+    x = "Number of votes",
+    y = "Average rating out of 10",
+    title = "Average rating based on number of votes"
+  )
 
 summer_movies %>%
   ggplot(aes(
     x = num_votes,
     y = average_rating
   ))+
-  geom_smooth()
+  geom_smooth()+
+   labs(
+    x = "Number of votes",
+    y = "Average rating out of 10",
+    title = "Average rating based on number of votes"
+  )
 
 ```
 
@@ -217,13 +227,19 @@ This plot was more for my amusement and to understand the difference between geo
 
 To better visualize this, I took the films with the ten hightest number of people voting and ten lowest number of people voting and compared them.
 
-```{r visuliation 6, fig.show="hold", out.width="50%"}
+```{r visuliation 6, fig.height = 8, fig.show="hold", out.width="50%"}
 
 top_bottom_25 <- summer_movies %>%
   filter(
     title_type == "movie"
   )
 
+top_bottom_25 <- top_bottom_25 %>%
+mutate(title_last = case_when(
+    primary_title == "Indian Summer" & year == "2013" ~ "Indian Summer (2013)",
+    primary_title == "Summer of Soul (...Or, When the Revolution Could Not Be Televised)" ~ "Summer of Soul",
+    .default = as.character(primary_title)
+  ))
 
 top_25 <- top_bottom_25 %>%
    arrange(desc(num_votes)) %>%
@@ -231,12 +247,12 @@ top_25 <- top_bottom_25 %>%
 
 top_25 %>%
   ggplot(aes(
-    x = fct_rev(primary_title),
+    x = fct_rev(title_last),
     y = average_rating
   ))+
   geom_col(alpha = .5)+
   theme_bw()+
-  geom_text(aes(x = primary_title, 
+  geom_text(aes(x = title_last, 
               y = average_rating, 
               label = num_votes))+
   coord_flip()+
@@ -247,25 +263,21 @@ top_25 %>%
   )
 
 
+
+
+
 bottom_25 <- top_bottom_25 %>%
    arrange(num_votes) %>%
     slice(1:25) 
 
-bottom_25 <- bottom_25 %>%
-mutate(primary_title = case_when(
-    primary_title == "Indian Summer" & year == "2013" ~ "Indian Summer (2013)",
-    .default = as.character(primary_title)
-  ))
-
-
 bottom_25 %>%
   ggplot(aes(
-    x = fct_rev(primary_title),
+    x = fct_rev(title_last),
     y = average_rating
   ))+
   geom_col(alpha = .5)+
   theme_bw()+
-  geom_text(aes(x = primary_title, 
+  geom_text(aes(x = title_last, 
               y = average_rating, 
               label = num_votes))+
   coord_flip()+
@@ -277,4 +289,4 @@ bottom_25 %>%
 
 ```
 
-You can see in the side by side comparision that there is more variability in the bottom 25 rating than in the top 25 ratings for movies.
+You can see in the side by side comparision that there is more variability and ratings are lower in the bottom 25 rating than in the top 25 ratings for movies.
