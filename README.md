@@ -4,4 +4,4 @@ Welcome!
 
 This project are my unguided exploration of the Tidy Tuesday from July 30th, 2024. I scratch the surface upon what is possible with data manipulation and visualization.
 
-Note: Work still needs to be done to update the aesthetics of the graphs.
+Note: Work still being done to update the aesthetics of the graphs.
